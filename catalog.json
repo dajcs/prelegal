@@ -1,0 +1,62 @@
+[
+  {
+    "name": "Mutual NDA",
+    "description": "A mutual non-disclosure agreement (MNDA) for two parties to share confidential information while evaluating a potential business relationship. Covers confidentiality obligations, permitted disclosures, exceptions, and survival of obligations beyond the agreement term. Developed by Common Paper under CC BY 4.0.",
+    "filename": "Mutual-NDA.md"
+  },
+  {
+    "name": "Mutual NDA Cover Page",
+    "description": "The cover page and signature block for the Common Paper Mutual NDA. Includes configurable fields for the effective date, agreement term, confidentiality protection period, governing law, and party details. Meant to be used together with Mutual-NDA.md.",
+    "filename": "Mutual-NDA-coverpage.md"
+  },
+  {
+    "name": "Cloud Service Agreement",
+    "description": "A comprehensive SaaS subscription agreement between a cloud service provider and customer. Covers access and use rights, restrictions, privacy and security, payment and taxes, term and termination, warranties, limitation of liability, indemnification, confidentiality, and data definitions. Developed by Common Paper under CC BY 4.0.",
+    "filename": "CSA.md"
+  },
+  {
+    "name": "Service Level Agreement",
+    "description": "A service level agreement (SLA) addendum for cloud services that defines uptime commitments, support response time standards, customer remedies (service credits), termination rights for repeated failures, and exclusions. Designed to work alongside the Common Paper Cloud Service Agreement.",
+    "filename": "sla.md"
+  },
+  {
+    "name": "Design Partner Agreement",
+    "description": "An agreement for early-stage product access and feedback collaboration between a provider and a design partner. Grants the partner limited product access in exchange for structured feedback, with the provider retaining full IP ownership of the product and all feedback provided. Includes confidentiality, restrictions, and termination provisions.",
+    "filename": "design-partner-agreement.md"
+  },
+  {
+    "name": "Professional Services Agreement",
+    "description": "A professional services agreement (PSA) governing engagements where a provider delivers custom work or consulting services to a customer via statements of work (SOWs). Covers deliverable acceptance, intellectual property assignment, subcontractors, payment terms, liability limits, and confidentiality. Developed by Common Paper under CC BY 4.0.",
+    "filename": "psa.md"
+  },
+  {
+    "name": "Data Processing Agreement",
+    "description": "A data processing agreement (DPA) that governs how a service provider processes personal data on behalf of a customer in compliance with GDPR and other applicable data protection laws. Covers processor/subprocessor relationships, restricted transfers (SCCs, UK Addendum), security incident response, audit rights, and data deletion obligations.",
+    "filename": "DPA.md"
+  },
+  {
+    "name": "Partnership Agreement",
+    "description": "A framework agreement establishing the terms of a business partnership between two companies. Covers cooperation obligations, payment and taxes, trademark licensing, privacy, escalation procedures for disputes, term and termination, liability caps, indemnification, and confidentiality. Developed by Common Paper under CC BY 4.0.",
+    "filename": "Partnership-Agreement.md"
+  },
+  {
+    "name": "Software License Agreement",
+    "description": "A software license agreement granting a customer a limited, non-exclusive, non-sublicensable license to use a provider's software during the subscription period. Covers usage restrictions, payment terms, warranty (substantial conformance to documentation), liability limitations, confidentiality, and export controls. Developed by Common Paper under CC BY 4.0.",
+    "filename": "Software-License-Agreement.md"
+  },
+  {
+    "name": "Pilot Agreement",
+    "description": "A short-term pilot program agreement allowing a prospective customer to evaluate a provider's product before committing to a longer-term contract. Grants a limited evaluation license during the pilot period, with the product provided AS IS, liability capped, and either party able to terminate with 30 days' notice.",
+    "filename": "Pilot-Agreement.md"
+  },
+  {
+    "name": "Business Associate Agreement",
+    "description": "A HIPAA-compliant business associate agreement (BAA) governing a provider's handling of protected health information (PHI) on behalf of a covered entity or business associate. Covers provider obligations for safeguarding PHI, subcontractor requirements, breach notification within 72 hours, audit rights, and data return or destruction upon termination.",
+    "filename": "BAA.md"
+  },
+  {
+    "name": "AI Addendum",
+    "description": "An addendum governing the use of AI-powered services within a broader customer-provider agreement. Addresses permitted uses and restrictions for AI services (including human oversight requirements), data and model training policies (inputs/outputs cannot be used for training without explicit authorization), output ownership, and disclaimers about AI accuracy.",
+    "filename": "AI-Addendum.md"
+  }
+]
