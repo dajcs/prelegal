@@ -110,3 +110,6 @@ media/
 *.key
 *.cert
 *.p12
+
+# Git worktrees
+.worktrees/
