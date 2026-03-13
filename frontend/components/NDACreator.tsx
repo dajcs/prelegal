@@ -78,15 +78,14 @@ export default function NDACreator() {
             </button>
           </div>
 
-          {/* Panel content */}
-          <div className="flex-1 overflow-hidden">
-            {tab === 'chat' ? (
+          {/* Panel content — both mounted, visibility toggled to preserve state */}
+          <div className="flex-1 overflow-hidden relative">
+            <div className={`absolute inset-0 ${tab === 'chat' ? '' : 'hidden'}`}>
               <ChatPanel data={formData} onUpdates={handleChatUpdates} />
-            ) : (
-              <div className="h-full overflow-y-auto">
-                <NDAForm data={formData} onChange={handleChange} />
-              </div>
-            )}
+            </div>
+            <div className={`absolute inset-0 overflow-y-auto ${tab === 'form' ? '' : 'hidden'}`}>
+              <NDAForm data={formData} onChange={handleChange} />
+            </div>
           </div>
         </div>
 
