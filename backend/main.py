@@ -58,7 +58,11 @@ async def login(body: LoginRequest, db: DB):
 
 # --- Chat ---
 
-SYSTEM_PROMPT = """You are a legal assistant helping a user fill out a Mutual Non-Disclosure Agreement (MNDA).
+def build_system_prompt() -> str:
+    from datetime import date
+    today = date.today().isoformat()
+    return f"""You are a legal assistant helping a user fill out a Mutual Non-Disclosure Agreement (MNDA).
+Today's date is {today}. Use this when the user says "today" or "now" for any date field.
 
 Your job is to have a friendly conversation to gather the information needed to complete the document.
 Ask about one or two fields at a time. When you have enough information from the user's message, extract it and return field updates.
@@ -114,7 +118,7 @@ class ChatResponse(BaseModel):
 @app.post("/api/chat")
 async def chat(body: ChatRequest) -> ChatResponse:
     """AI chat endpoint: takes conversation history, returns message + field updates."""
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    messages = [{"role": "system", "content": build_system_prompt()}]
     messages += [{"role": m.role, "content": m.content} for m in body.messages]
 
     print(f"\n=== CHAT REQUEST ({len(body.messages)} messages) ===")
