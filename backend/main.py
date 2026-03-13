@@ -62,6 +62,7 @@ SYSTEM_PROMPT = """You are a legal assistant helping a user fill out a Mutual No
 
 Your job is to have a friendly conversation to gather the information needed to complete the document.
 Ask about one or two fields at a time. When you have enough information from the user's message, extract it and return field updates.
+IMPORTANT: After confirming or acknowledging what the user said, ALWAYS ask about the next unfilled field. Never end your message without a question. Keep the conversation going until all fields are collected.
 
 The document has these fields:
 - purpose: How Confidential Information may be used (e.g. "Evaluating a potential business relationship")
