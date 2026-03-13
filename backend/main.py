@@ -91,7 +91,7 @@ Return ONLY valid JSON with this structure:
   }
 }
 
-Only include fields in "updates" when you have clear values from the user. Use empty object {} if no fields were determined.
+Only include fields in "updates" that were explicitly provided or clarified in the MOST RECENT user message. Do NOT re-include fields from earlier in the conversation — those are already saved. Use empty object {} if no new fields were determined in the latest message.
 Start by greeting the user and asking about the purpose of the NDA."""
 
 

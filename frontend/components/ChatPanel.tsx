@@ -30,7 +30,7 @@ export default function ChatPanel({ data, onUpdates }: Props) {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: msgs, current_data: data }),
+        body: JSON.stringify({ messages: msgs, current_data: {} }),
       })
       const json = await res.json()
       const aiMsg: Message = { role: 'assistant', content: json.message }
