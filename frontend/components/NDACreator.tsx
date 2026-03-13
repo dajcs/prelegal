@@ -4,12 +4,20 @@ import { useState } from 'react'
 import { NDAFormData, defaultFormData } from '@/lib/types'
 import NDAForm from './NDAForm'
 import NDAPreview from './NDAPreview'
+import ChatPanel from './ChatPanel'
+
+type PanelTab = 'chat' | 'form'
 
 export default function NDACreator() {
   const [formData, setFormData] = useState<NDAFormData>(defaultFormData)
+  const [tab, setTab] = useState<PanelTab>('chat')
 
   function handleChange(field: keyof NDAFormData, value: string) {
     setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  function handleChatUpdates(updates: Partial<NDAFormData>) {
+    setFormData((prev) => ({ ...prev, ...updates }))
   }
 
   return (
@@ -44,9 +52,41 @@ export default function NDACreator() {
 
       {/* Split layout */}
       <div className="split-layout flex" style={{ height: 'calc(100vh - 57px)' }}>
-        {/* Form panel */}
-        <div className="form-panel no-print w-[400px] flex-shrink-0 overflow-y-auto border-r border-gray-200 bg-white">
-          <NDAForm data={formData} onChange={handleChange} />
+        {/* Left panel */}
+        <div className="form-panel no-print w-[400px] flex-shrink-0 flex flex-col border-r border-gray-200 bg-white">
+          {/* Tab toggle */}
+          <div className="flex border-b border-gray-200 shrink-0">
+            <button
+              onClick={() => setTab('chat')}
+              className={`flex-1 py-2.5 text-xs font-semibold uppercase tracking-widest transition-colors ${
+                tab === 'chat'
+                  ? 'text-[#209dd7] border-b-2 border-[#209dd7]'
+                  : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              AI Chat
+            </button>
+            <button
+              onClick={() => setTab('form')}
+              className={`flex-1 py-2.5 text-xs font-semibold uppercase tracking-widest transition-colors ${
+                tab === 'form'
+                  ? 'text-[#209dd7] border-b-2 border-[#209dd7]'
+                  : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              Edit Fields
+            </button>
+          </div>
+
+          {/* Panel content — both mounted, visibility toggled to preserve state */}
+          <div className="flex-1 overflow-hidden relative">
+            <div className={`absolute inset-0 ${tab === 'chat' ? '' : 'hidden'}`}>
+              <ChatPanel data={formData} onUpdates={handleChatUpdates} />
+            </div>
+            <div className={`absolute inset-0 overflow-y-auto ${tab === 'form' ? '' : 'hidden'}`}>
+              <NDAForm data={formData} onChange={handleChange} />
+            </div>
+          </div>
         </div>
 
         {/* Document preview panel */}
