@@ -22,7 +22,10 @@ MODEL = "openrouter/openai/gpt-oss-120b"
 EXTRA_BODY = {"provider": {"order": ["cerebras"]}}
 
 STATIC_DIR = Path(__file__).parent / "static"
-TEMPLATES_DIR = Path(__file__).parent.parent / "templates"
+# Local dev: backend/main.py → ../templates; Docker: /app/main.py → ./templates
+_templates_local = Path(__file__).parent.parent / "templates"
+_templates_docker = Path(__file__).parent / "templates"
+TEMPLATES_DIR = _templates_local if _templates_local.exists() else _templates_docker
 
 # Catalog: map filename -> human-readable name
 CATALOG: dict[str, str] = {
