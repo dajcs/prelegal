@@ -8,7 +8,7 @@ The available documents are covered in the catalog.json file in the project root
 
 @catalog.json
 
-Before we start: the initial implementation is a frontend-only prototype that only supports the Mutual NDA docuemnt with no AI chat.
+The initial prototype was a frontend-only Next.js app supporting the Mutual NDA document with no AI chat. The V1 foundation (PL-4) has since been built: the project now has a full backend, Docker container, and fake login screen.
 
 ## Development process
 
@@ -29,8 +29,8 @@ There is an OPENROUTER_API_KEY in the .env file in the project root.
 The entire project should be packaged into a Docker container.
 The backend should be in `backend/` and be a uv project, using FastAPI.  \
 The frontend should be in `frontend/`.  \
-The database should use `SQLLite` and be created from scratch each time the Docker container is brought up, allowing for a users table with sign up and sign in.  \
-Consider statically building the frontend and serving it via FastAPI, if that will work.
+The database uses SQLite at `/data/prelegal.db` (persisted via Docker volume), with a `users` table (id, email, name, created_at).  \
+The frontend is statically built (`output: 'export'`) and served via FastAPI `StaticFiles`.
 There should be scripts in `scripts/` for:
 
 ```bash
@@ -54,4 +54,18 @@ Backend available at http://localhost:8000
 - Purple Secondary: `#753991` (submit buttons)
 - Dark Navy: `#032147` (headings)
 - Gray Text: `#888888`
+
+## Implementation Status
+
+### Completed
+- **PL-3**: Mutual NDA Creator — Next.js frontend with live form + document preview, print-to-PDF
+- **PL-4**: V1 foundation — FastAPI backend (`backend/`), SQLite DB, Docker container, start/stop scripts, fake login screen
+
+### Architecture notes
+- `frontend/` — Next.js 14 (App Router, TypeScript, Tailwind). Static export served by FastAPI.
+- `backend/` — FastAPI (uv), SQLite at `/data/prelegal.db` via Docker volume. API at `/api/*`.
+- Login is currently fake: any email+name succeeds, session stored in `localStorage`.
+- `AuthGuard` component in `frontend/components/AuthGuard.tsx` protects all app routes.
+- `Dockerfile` is multi-stage: builds Next.js, then copies `out/` into FastAPI's `static/` dir.
+- AI chat not yet implemented.
 
