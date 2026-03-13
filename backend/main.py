@@ -1,13 +1,14 @@
 """PreLegal FastAPI backend."""
 import json
 import os
+import re
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Annotated
 
 import aiosqlite
 from dotenv import load_dotenv
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from litellm import completion
@@ -21,6 +22,39 @@ MODEL = "openrouter/openai/gpt-oss-120b"
 EXTRA_BODY = {"provider": {"order": ["cerebras"]}}
 
 STATIC_DIR = Path(__file__).parent / "static"
+TEMPLATES_DIR = Path(__file__).parent.parent / "templates"
+
+# Catalog: map filename -> human-readable name
+CATALOG: dict[str, str] = {
+    "Mutual-NDA-coverpage.md": "Mutual NDA Cover Page",
+    "Mutual-NDA.md": "Mutual NDA",
+    "CSA.md": "Cloud Service Agreement",
+    "sla.md": "Service Level Agreement",
+    "design-partner-agreement.md": "Design Partner Agreement",
+    "psa.md": "Professional Services Agreement",
+    "DPA.md": "Data Processing Agreement",
+    "Partnership-Agreement.md": "Partnership Agreement",
+    "Software-License-Agreement.md": "Software License Agreement",
+    "Pilot-Agreement.md": "Pilot Agreement",
+    "BAA.md": "Business Associate Agreement",
+    "AI-Addendum.md": "AI Addendum",
+}
+
+SUPPORTED_DOCS = ", ".join(CATALOG.values())
+
+
+def extract_fields(content: str) -> list[str]:
+    """Extract unique field names from template span markers, stripping possessives."""
+    matches = re.findall(r'<span class="[a-z_]+_link"[^>]*>([^<]+)</span>', content)
+    seen: set[str] = set()
+    fields: list[str] = []
+    for m in matches:
+        # Normalize possessives: "Customer's" → "Customer"
+        normalized = re.sub(r"[\u2019']s$", "", m).strip()
+        if normalized and normalized not in seen:
+            seen.add(normalized)
+            fields.append(normalized)
+    return fields
 
 
 @asynccontextmanager
@@ -59,6 +93,7 @@ async def login(body: LoginRequest, db: DB):
 # --- Chat ---
 
 def build_system_prompt() -> str:
+    """System prompt for the Mutual NDA (legacy, keeps existing NDA flow unchanged)."""
     from datetime import date
     today = date.today().isoformat()
     return f"""You are a legal assistant helping a user fill out a Mutual Non-Disclosure Agreement (MNDA).
@@ -100,6 +135,52 @@ Only include fields in "updates" that were explicitly provided or clarified in t
 Start by greeting the user and asking about the purpose of the NDA."""
 
 
+def build_dynamic_system_prompt(doc_name: str, fields: list[str]) -> str:
+    """System prompt for any document type based on its extracted fields."""
+    from datetime import date
+    today = date.today().isoformat()
+    fields_str = "\n".join(f'- "{f}"' for f in fields)
+    return f"""You are a legal assistant helping a user fill out a {doc_name}.
+Today's date is {today}. Use this when the user says "today" or "now" for any date field.
+
+Your job is to have a friendly conversation to gather the information needed to complete the document.
+Ask about one or two fields at a time. When you have enough information from the user's message, extract it and return field updates.
+IMPORTANT: After confirming or acknowledging what the user said, ALWAYS ask about the next unfilled field. Never end your message without a question. Keep the conversation going until all fields are collected.
+
+The document has these fields (use the exact field name as the key in "updates"):
+{fields_str}
+
+Return ONLY valid JSON with this structure:
+{{
+  "message": "Your conversational response to the user",
+  "updates": {{
+    "Field Name": "value"
+  }}
+}}
+
+Only include fields in "updates" that were explicitly provided or clarified in the MOST RECENT user message. Do NOT re-include fields from earlier in the conversation — those are already saved. Use empty object {{}} if no new fields were determined in the latest message.
+
+If the user asks you to help with a different type of document that is not a {doc_name}, politely explain that you can only help with {doc_name} in this session, and suggest they go back to the catalog to choose the right document type. The supported documents are: {SUPPORTED_DOCS}.
+
+Start by greeting the user and asking about the first few fields of the {doc_name}."""
+
+
+class TemplateResponse(BaseModel):
+    content: str
+    fields: list[str]
+
+
+@app.get("/api/template/{filename}")
+async def get_template(filename: str) -> TemplateResponse:
+    """Return template markdown content and extracted field names."""
+    if filename not in CATALOG:
+        raise HTTPException(status_code=404, detail="Template not found")
+    path = TEMPLATES_DIR / filename
+    content = path.read_text(encoding="utf-8")
+    fields = extract_fields(content)
+    return TemplateResponse(content=content, fields=fields)
+
+
 class ChatMessage(BaseModel):
     role: str
     content: str
@@ -108,6 +189,7 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     messages: list[ChatMessage]
     current_data: dict
+    doc_type: str | None = None  # filename of the document being created
 
 
 class ChatResponse(BaseModel):
@@ -118,7 +200,16 @@ class ChatResponse(BaseModel):
 @app.post("/api/chat")
 async def chat(body: ChatRequest) -> ChatResponse:
     """AI chat endpoint: takes conversation history, returns message + field updates."""
-    messages = [{"role": "system", "content": build_system_prompt()}]
+    if body.doc_type and body.doc_type in CATALOG:
+        path = TEMPLATES_DIR / body.doc_type
+        content = path.read_text(encoding="utf-8")
+        fields = extract_fields(content)
+        doc_name = CATALOG[body.doc_type]
+        system_prompt = build_dynamic_system_prompt(doc_name, fields)
+    else:
+        system_prompt = build_system_prompt()
+
+    messages = [{"role": "system", "content": system_prompt}]
     messages += [{"role": m.role, "content": m.content} for m in body.messages]
 
     print(f"\n=== CHAT REQUEST ({len(body.messages)} messages) ===")

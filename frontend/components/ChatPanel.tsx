@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { NDAFormData } from '@/lib/types'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -9,18 +8,17 @@ interface Message {
 }
 
 interface Props {
-  data: NDAFormData
-  onUpdates: (updates: Partial<NDAFormData>) => void
+  onUpdates: (updates: Record<string, string>) => void
+  docType?: string  // filename; if absent, uses legacy NDA system prompt
 }
 
-export default function ChatPanel({ data, onUpdates }: Props) {
+export default function ChatPanel({ onUpdates, docType }: Props) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Kick off the conversation on mount
   useEffect(() => {
     sendToAI([])
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -31,7 +29,7 @@ export default function ChatPanel({ data, onUpdates }: Props) {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: msgs, current_data: {} }),
+        body: JSON.stringify({ messages: msgs, current_data: {}, doc_type: docType ?? null }),
       })
       const json = await res.json()
       const aiMsg: Message = { role: 'assistant', content: json.message }
