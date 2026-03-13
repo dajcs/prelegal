@@ -121,7 +121,7 @@ async def chat(body: ChatRequest) -> ChatResponse:
         model=MODEL,
         messages=messages,
         response_format={"type": "json_object"},
-        reasoning_effort="low",
+        reasoning_effort="medium",
         extra_body=EXTRA_BODY,
     )
     raw = response.choices[0].message.content

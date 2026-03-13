@@ -18,6 +18,7 @@ export default function ChatPanel({ data, onUpdates }: Props) {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   // Kick off the conversation on mount
   useEffect(() => {
@@ -57,6 +58,10 @@ export default function ChatPanel({ data, onUpdates }: Props) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
 
+  useEffect(() => {
+    if (!loading) inputRef.current?.focus()
+  }, [loading])
+
   return (
     <div className="flex flex-col h-full">
       {/* Messages */}
@@ -91,6 +96,7 @@ export default function ChatPanel({ data, onUpdates }: Props) {
       {/* Input */}
       <div className="border-t border-gray-200 p-3 flex gap-2">
         <input
+          ref={inputRef}
           type="text"
           className="flex-1 rounded-full border border-gray-200 px-4 py-2 text-sm focus:outline-none focus:border-[#209dd7] focus:ring-1 focus:ring-[#209dd7]"
           placeholder="Type your message..."
