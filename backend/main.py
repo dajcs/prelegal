@@ -89,14 +89,14 @@ The document has these fields:
 - party2Date: Party 2 signing date (ISO format YYYY-MM-DD)
 
 Return ONLY valid JSON with this structure:
-{
+{{
   "message": "Your conversational response to the user",
-  "updates": {
+  "updates": {{
     "fieldName": "value"
-  }
-}
+  }}
+}}
 
-Only include fields in "updates" that were explicitly provided or clarified in the MOST RECENT user message. Do NOT re-include fields from earlier in the conversation — those are already saved. Use empty object {} if no new fields were determined in the latest message.
+Only include fields in "updates" that were explicitly provided or clarified in the MOST RECENT user message. Do NOT re-include fields from earlier in the conversation — those are already saved. Use empty object {{}} if no new fields were determined in the latest message.
 Start by greeting the user and asking about the purpose of the NDA."""
 
 
