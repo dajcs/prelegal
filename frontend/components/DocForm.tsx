@@ -6,6 +6,14 @@ interface Props {
   onChange: (field: string, value: string) => void
 }
 
+function humanize(field: string): string {
+  return field
+    .replace(/_/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')  // camelCase → words
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .trim()
+}
+
 export default function DocForm({ fields, formData, onChange }: Props) {
   if (fields.length === 0) {
     return (
@@ -18,13 +26,13 @@ export default function DocForm({ fields, formData, onChange }: Props) {
       {fields.map((field) => (
         <div key={field}>
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-            {field}
+            {humanize(field)}
           </label>
           <input
             type="text"
             value={formData[field] ?? ''}
             onChange={(e) => onChange(field, e.target.value)}
-            placeholder={field}
+            placeholder={humanize(field)}
             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-[#209dd7] focus:ring-1 focus:ring-[#209dd7]"
           />
         </div>
