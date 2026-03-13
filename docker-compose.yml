@@ -1,0 +1,12 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - prelegal_data:/data
+    environment:
+      - DB_PATH=/data/prelegal.db
+
+volumes:
+  prelegal_data:

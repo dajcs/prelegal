@@ -96,7 +96,6 @@ Thumbs.db
 *.sqlite3
 
 # Docker
-.dockerignore
 
 # Alembic / migrations (keep structure, ignore auto-generated)
 # alembic/versions/
