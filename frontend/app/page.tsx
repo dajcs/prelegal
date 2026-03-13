@@ -1,10 +1,10 @@
 import AuthGuard from '@/components/AuthGuard'
-import NDACreator from '@/components/NDACreator'
+import CatalogPage from '@/components/CatalogPage'
 
 export default function Home() {
   return (
     <AuthGuard>
-      <NDACreator />
+      <CatalogPage />
     </AuthGuard>
   )
 }
