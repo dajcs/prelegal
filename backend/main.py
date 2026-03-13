@@ -117,6 +117,10 @@ async def chat(body: ChatRequest) -> ChatResponse:
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     messages += [{"role": m.role, "content": m.content} for m in body.messages]
 
+    print(f"\n=== CHAT REQUEST ({len(body.messages)} messages) ===")
+    for m in body.messages[-3:]:  # last 3 for brevity
+        print(f"  [{m.role}]: {m.content[:120]}")
+
     response = completion(
         model=MODEL,
         messages=messages,
@@ -125,8 +129,10 @@ async def chat(body: ChatRequest) -> ChatResponse:
         extra_body=EXTRA_BODY,
     )
     raw = response.choices[0].message.content
+    print(f"=== AI RAW RESPONSE ===\n{raw}\n")
     data = json.loads(raw)
-    return ChatResponse(message=data.get("message", ""), updates=data.get("updates", {}))
+    updates = {k: str(v) for k, v in data.get("updates", {}).items()}
+    return ChatResponse(message=data.get("message", ""), updates=updates)
 
 
 # --- Health ---
