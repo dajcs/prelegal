@@ -12,6 +12,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from litellm import completion
+import bcrypt
 from pydantic import BaseModel
 
 from database import init_db, get_db
@@ -46,6 +47,14 @@ CATALOG: dict[str, str] = {
 SUPPORTED_DOCS = ", ".join(CATALOG.values())
 
 
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+
+def verify_password(password: str, hashed: str) -> bool:
+    return bcrypt.checkpw(password.encode(), hashed.encode())
+
+
 def extract_fields(content: str) -> list[str]:
     """Extract unique field names from template span markers, stripping possessives."""
     matches = re.findall(r'<span class="[a-z_]+_link"[^>]*>([^<]+)</span>', content)
@@ -73,24 +82,114 @@ DB = Annotated[aiosqlite.Connection, Depends(get_db)]
 
 # --- Auth ---
 
-class LoginRequest(BaseModel):
+class SignupRequest(BaseModel):
     email: str
     name: str
+    password: str
 
 
-@app.post("/api/auth/login")
-async def login(body: LoginRequest, db: DB):
-    """Fake login: create or find user, return session info."""
+class SigninRequest(BaseModel):
+    email: str
+    password: str
+
+
+@app.post("/api/auth/signup")
+async def signup(body: SignupRequest, db: DB):
+    """Register a new user with a hashed password."""
+    if not body.email.strip() or not body.name.strip() or not body.password:
+        raise HTTPException(status_code=400, detail="All fields are required")
+    async with db.execute("SELECT id FROM users WHERE email = ?", (body.email.strip(),)) as cur:
+        if await cur.fetchone():
+            raise HTTPException(status_code=409, detail="Email already registered")
+    hashed = hash_password(body.password)
     await db.execute(
-        "INSERT OR IGNORE INTO users (email, name) VALUES (?, ?)",
-        (body.email, body.name),
+        "INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?)",
+        (body.email.strip(), body.name.strip(), hashed),
     )
     await db.commit()
     async with db.execute(
-        "SELECT id, email, name FROM users WHERE email = ?", (body.email,)
-    ) as cursor:
-        row = await cursor.fetchone()
+        "SELECT id, email, name FROM users WHERE email = ?", (body.email.strip(),)
+    ) as cur:
+        row = await cur.fetchone()
     return {"userId": row["id"], "email": row["email"], "name": row["name"]}
+
+
+@app.post("/api/auth/signin")
+async def signin(body: SigninRequest, db: DB):
+    """Sign in with email and password."""
+    async with db.execute(
+        "SELECT id, email, name, password_hash FROM users WHERE email = ?", (body.email.strip(),)
+    ) as cur:
+        row = await cur.fetchone()
+    if not row or not verify_password(body.password, row["password_hash"]):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    return {"userId": row["id"], "email": row["email"], "name": row["name"]}
+
+
+# --- Documents ---
+
+class CreateDocRequest(BaseModel):
+    user_id: int
+    doc_type: str
+    doc_name: str
+
+
+class UpdateDocRequest(BaseModel):
+    fields_json: str
+
+
+@app.post("/api/documents")
+async def create_document(body: CreateDocRequest, db: DB):
+    """Create a new document record for a user."""
+    if body.doc_type not in CATALOG:
+        raise HTTPException(status_code=400, detail="Unknown document type")
+    cursor = await db.execute(
+        "INSERT INTO documents (user_id, doc_type, doc_name, fields_json) VALUES (?, ?, ?, ?)",
+        (body.user_id, body.doc_type, body.doc_name, "{}"),
+    )
+    await db.commit()
+    return {"id": cursor.lastrowid}
+
+
+@app.patch("/api/documents/{doc_id}")
+async def update_document(doc_id: int, body: UpdateDocRequest, db: DB):
+    """Update a document's field values."""
+    cursor = await db.execute(
+        "UPDATE documents SET fields_json = ?, updated_at = datetime('now') WHERE id = ?",
+        (body.fields_json, doc_id),
+    )
+    await db.commit()
+    if cursor.rowcount == 0:
+        raise HTTPException(status_code=404, detail="Document not found")
+    return {"ok": True}
+
+
+@app.get("/api/documents")
+async def list_documents(user_id: int, db: DB):
+    """List all documents for a user, most recent first."""
+    async with db.execute(
+        "SELECT id, doc_type, doc_name, created_at FROM documents WHERE user_id = ? ORDER BY updated_at DESC",
+        (user_id,),
+    ) as cur:
+        rows = await cur.fetchall()
+    return [{"id": r["id"], "doc_type": r["doc_type"], "doc_name": r["doc_name"], "created_at": r["created_at"]} for r in rows]
+
+
+@app.get("/api/documents/{doc_id}")
+async def get_document(doc_id: int, db: DB):
+    """Get a single document's fields."""
+    async with db.execute(
+        "SELECT id, doc_type, doc_name, fields_json FROM documents WHERE id = ?", (doc_id,)
+    ) as cur:
+        row = await cur.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Document not found")
+    return {
+        "id": row["id"],
+        "doc_type": row["doc_type"],
+        "doc_name": row["doc_name"],
+        "fields": json.loads(row["fields_json"]),
+    }
 
 
 # --- Chat ---
